@@ -1,0 +1,22 @@
+{
+    "cloud_host_test":{
+        "game_case": {
+            "active": true,
+            "time": 1,
+            "order": 0
+        },
+        "video_case":{
+            "active": false,
+            "time": 1,
+            "order": 1
+        },
+        "loop": 1
+    },
+    "reboot_test": {
+            "id": 0,
+            "active": true,
+            "total_reboot": 3,
+            "already_reboot": 0
+    }
+
+}

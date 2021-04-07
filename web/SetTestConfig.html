@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TestConfig</title>
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <style type="text/css">
+        button {
+            width: 150px;
+            padding:8px;
+            background-color: #ca464b;
+            color: #fff;
+            -moz-border-radius: 10px;
+            -webkit-border-radius: 10px;
+            border-radius: 10px; /* future proofing */
+            -khtml-border-radius: 10px; /* for old Konqueror browsers */
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid transparent;
+            font-weight: 700;
+            font-size:100%;
+            font-family:"Trebuchet MS", Arial, Helvetica, sans-serif
+        }
+        select{
+            outline-style: none ;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family:"Trebuchet MS", Arial, Helvetica, sans-serif
+        }
+         input{
+            width:100px;
+            outline-style: none ;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-family:"Trebuchet MS", Arial, Helvetica, sans-serif
+        }
+
+
+        #configtable
+        {
+            font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+            width:100%;
+            border-collapse:collapse;
+        }
+        #configtable td, #configtable th
+        {
+            font-size:1em;
+            border:1px solid #bf3a3e;
+            padding:3px 7px 2px 7px;
+        }
+        #configtable th
+        {
+            font-size:1.1em;
+            text-align:left;
+            padding-top:5px;
+            padding-bottom:4px;
+            background-color: #c96658;
+            color:#ffffff;
+        }
+        #configtable tr.alt td
+        {
+            color:#000000;
+            background-color:#EAF2D3;
+        }
+    </style>
+
+</head>
+<body>
+
+<table border="1" id="configtable">
+
+    <tr>
+        <th>case</th>
+        <th colspan="2">config</th>
+    </tr>
+    <tr>
+        <td rowspan="3">gameCase</td>
+        <td>active</td>
+        <td><select id="game_active"><option>true</option><option>false</option></select></td>
+    </tr>
+    <tr>
+        <td>time(min)</td>
+        <td><input type="text" value="5" id="game_time"/></td>
+    </tr>
+    <tr>
+        <td>order</td>
+        <td><input type="text" value="5" id="game_order"/></td>
+    </tr>
+
+    <tr>
+        <td rowspan="3">videoCase</td>
+        <td>active</td>
+        <td><select id="video_active"><option>true</option><option>false</option></select></td>
+    </tr>
+    <tr>
+        <td>time(min)</td>
+        <td><input type="text" value="5" id="video_time"/></td>
+    </tr>
+    <tr>
+        <td>order</td>
+        <td><input id="video_order"  type="text" value="5"/></td>
+    </tr>
+
+    <tr>
+        <td >loop</td>
+        <td colspan="2"><input type="text" value="1" id="loop"/></td>
+    </tr>
+
+
+    <tr>
+        <td rowspan="3">rebootCase</td>
+        <td >active</td>
+        <td><select id="reboot_active"><option>true</option><option>false</option></select></td>
+    </tr>
+    <tr>
+        <td>count</td>
+        <td><input id="reboot_count" type="text" value="5"/></td>
+    </tr>
+
+</table>
+
+<button onclick="postTestConfig()">submit</button>
+
+</body>
+
+<script type="text/javascript">
+
+    var jsonobj={};
+    fetch("http://10.1.108.250/query/rawConfig ", {
+        method:'GET',
+        mode:'cors',// 允许发送跨域请求
+        credentials: 'include',
+    }).then(function(response){
+        return response.text()
+    }).then(function (body) {
+        jsonobj=eval('(' + body + ')');
+
+        $("#video_active option:contains('"+jsonobj.cloud_host_test.game_case.active+"')").attr('selected', true);
+        $("#game_active option[text=temp]").attr("selected", true);
+        $('#game_time').val(jsonobj.cloud_host_test.game_case.time);
+        $('#game_order').val(jsonobj.cloud_host_test.game_case.order);
+
+
+        $("#video_active option:contains('"+jsonobj.cloud_host_test.video_case.active+"')").attr('selected', true);
+        $('#video_time').val( jsonobj.cloud_host_test.video_case.time);
+        $('#video_order').val(jsonobj.cloud_host_test.video_case.order);
+
+        $('#loop').val(jsonobj.cloud_host_test.loop);
+
+        $("#reboot_active option:selected").val( jsonobj.reboot_test.active);
+        $('#reboot_count').val(jsonobj.reboot_test.total_reboot);
+
+
+
+    }).catch(function(e){
+        console.log('error: ' + e.toString());
+    });
+
+    function postTestConfig() {
+
+        jsonobj.cloud_host_test.game_case.active =eval( $("#game_active option:selected").val());
+        jsonobj.cloud_host_test.game_case.time =parseInt( $('#game_time').val());
+        jsonobj.cloud_host_test.game_case.order = parseInt($('#game_order').val());
+
+        jsonobj.cloud_host_test.video_case.active = eval($("#video_active option:selected").val());
+        jsonobj.cloud_host_test.video_case.time = parseInt($('#video_time').val());
+        jsonobj.cloud_host_test.video_case.order =parseInt( $('#video_order').val());
+
+
+        jsonobj.cloud_host_test.loop =parseInt($('#loop').val());
+
+        jsonobj.reboot_test.active = eval($("#reboot_active option:selected").val());
+        jsonobj.reboot_test.total_reboot =  parseInt($('#reboot_count').val());
+
+        fetch("http://10.1.108.250/set/rawConfig ", {
+            method: 'POST',
+            body: JSON.stringify(jsonobj,null, 4) // 这里是请求对象
+        }).then((res)=>{
+
+                return res.text()
+            })
+            .then((res)=>{
+                console.log(res)
+            });
+
+        console.log(jsonobj)
+
+    }
+</script>
+</html>
